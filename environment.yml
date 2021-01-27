@@ -1,0 +1,11 @@
+name: hml
+channels:
+  - defaults
+dependencies:
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - jupyterlab
+  - numpy
+  - cartopy
+prefix: /home/neilmcb/miniconda3/envs/hml
