@@ -20,11 +20,13 @@ class MyCustomTransformer(BaseEstimator, TransformerMixin):
         # transform the data
         return X_transformed
 ```
-Adding `BaseEstimator` handles parameter access neatly and `TransformerMixin` gives us the `fit_transform` method for free.
+Adding `BaseEstimator` handles parameter access neatly and `TransformerMixin` gives us the
+`fit_transform` method for free.
 
 
-Using `sklearn.compose.ColumnTransformer` you can bring together lots of different transformations applied to subsets of columns into one
-handy pipeline stage. This can be combined with e.g. models in another pipeline wrapper:
+Using `sklearn.compose.ColumnTransformer` you can bring together lots of different transformations
+applied to subsets of columns into one handy pipeline stage. This can be combined with e.g. models
+in another pipeline wrapper:
 ```python
 transformations = ColumnTransformer([
     ('numerical', numerical_transformation_pipeline, numerical_columns),
@@ -39,6 +41,19 @@ end_to_end_pipeline = Pipeline([
 
 This can be passed to e.g. `GridSearchCV` and the hyperparameters accessed as:
 ```python
-{'model__n_estimators': [3, 10, 30], 'transformations__numerical__my_numerical_parameter': [1, 2, 3]}
+{
+    'model__n_estimators': [3, 10, 30],
+    'transformations__numerical__my_numerical_parameter': [1, 2, 3],
+}
 ```
 
+## Chapter 3
+
+F_1 score is the harmonic mean of precision and recall. This heavily penalises low values, so will
+only be high if both precision and recall are high.
+
+Some Scikit-learn models support multliclass classification:
+```python
+model = KNeighborsClassifier()
+model.fit(X_train, y_train)  # y.shappe == [N, K], k > 1
+```
