@@ -57,3 +57,40 @@ Some Scikit-learn models support multliclass classification:
 model = KNeighborsClassifier()
 model.fit(X_train, y_train)  # y.shappe == [N, K], k > 1
 ```
+
+## Chapter 4
+
+Scikit-learn includes a handy transformer for adding polynomial features:
+```python
+from sklearn.preprocessing import PolynomialFeatures
+...
+polynomial_features = PolynomialFeatures(degree=k, include_bias=True)
+X_polynomial = polynomial_features.fit_transform(X)
+```
+
+Most regularised models required scaling - we want the coefficents for each feature (or combination
+of features) to be penalised equally according to magnitude, otherwise large coefficients would be
+penalised even if they were required due to the shape of the data.
+
+### Types of regularisation:
+* __Ridge__: L2 regularisation
+  * Has a closed form solution
+* __Least Absolute Shrinkage and Selection Operator (LASSO)__: L1 regularisation
+  * Encourages sparse models - encourages complete elimination of unimportant features
+  * May be unstable around the maximum - be careful with learning rate here
+* __Elastic Net__: Combination of the two, with a mixing ratio defined as an extra hyperparameter
+
+Early stopping is good.
+
+### Softmax
+
+We would describe softmax as "multiclass" - i.e. it can decide between mutually exclusive classes.
+If we wanted to predict potentially multiple occurences within a single instance we would use what
+we call a "multioutput" classifier.
+
+We train softmax using cross-entropy - this is the multiclass generatlisation of log loss (i.e. we
+sum over each p_k per training instance, instead of just p and p-1).
+
+### Probability Distributions
+
+Kullback-Leibler (KL) divergence measures the difference between two probability distributions.
