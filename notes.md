@@ -2,6 +2,10 @@
 
 Notes from reading through [Hands-On Machine Learning with Scikit-Learn, Keras and TensorFlow, 2nd Edition](https://www.oreilly.com/library/view/hands-on-machine-learning/9781492032632/).
 
+## Misc
+
+* Obvious, but remember to consider how your algorithm scales with the number of features and the number of training instances!
+
 ## Chapter 2
 
 Scikit-Learn makes use of duck typing to define custom transformers/estimators/predictors, e.g.:
@@ -94,3 +98,30 @@ sum over each p_k per training instance, instead of just p and p-1).
 ### Probability Distributions
 
 Kullback-Leibler (KL) divergence measures the difference between two probability distributions.
+
+## Chapter 5
+
+For classification SVMs try to fit the widest possible "street" between the two classes of data,
+whilst minimising the number of margin violations (few datasets are truly linearly separable). On
+the other hand, for regression SVMs try to fit as much of the dataset onto the "street" itself.
+
+SVM works best on small to medium sized complex datasets. It's sensitive to feature scales, so
+use a `StandardScaler` first.
+
+Generally we fit these using the _hinge_ loss function, more on this later.
+
+There are various choices of kernel to consider:
+* __Linear__: This should be the default to try; it's pretty quick to run. You can model non-linear boundaries using simple feature augmentation.
+  * `c`: Controls for how many margin violations are permitted - i.e. how far into our clusters do we place the support vectors.
+* __Polynomial__: This uses the kernel trick to fit non-linear boundaries automatically.
+  * `c`: As above.
+  * `degree`: The degree of polynomial features to fit.
+  * `coef0`: How much to prefer/penalise high-degre features.
+* __Gaussian Radial Basis Function (RBF)__: This places a spherical Gaussian kernel at each point in the dataset and fis a decision boundary based on these.
+  * `c`: As above; the lower this is, the more "wiggly" the decision boundary will become.
+  * `gamma`: This tells us how far the "influence" of each basis function travels.
+* __and the rest...__: More basis functions exist, but are generally used for specialised purposes - e.g. string kernels.
+
+Sklearn's SVC works particularly well when features are sparse.
+
+We can use SVR (i.e. Support Vector _Regression_) models to identify outliers - these are the points that lie outside the margins of the SVM's "street".
