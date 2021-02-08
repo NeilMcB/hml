@@ -6,7 +6,7 @@ Notes from reading through [Hands-On Machine Learning with Scikit-Learn, Keras a
 
 * Obvious, but remember to consider how your algorithm scales with the number of features and the number of training instances!
 
-## Chapter 2
+## Chapter 2 - End-to-End Machine Learning Landscape
 
 Scikit-Learn makes use of duck typing to define custom transformers/estimators/predictors, e.g.:
 
@@ -51,7 +51,7 @@ This can be passed to e.g. `GridSearchCV` and the hyperparameters accessed as:
 }
 ```
 
-## Chapter 3
+## Chapter 3 - Classificaton
 
 F_1 score is the harmonic mean of precision and recall. This heavily penalises low values, so will
 only be high if both precision and recall are high.
@@ -62,7 +62,7 @@ model = KNeighborsClassifier()
 model.fit(X_train, y_train)  # y.shappe == [N, K], k > 1
 ```
 
-## Chapter 4
+## Chapter 4 - Training Models
 
 Scikit-learn includes a handy transformer for adding polynomial features:
 ```python
@@ -99,7 +99,8 @@ sum over each p_k per training instance, instead of just p and p-1).
 
 Kullback-Leibler (KL) divergence measures the difference between two probability distributions.
 
-## Chapter 5
+
+## Chapter 5 - Support Vector Machines
 
 For classification SVMs try to fit the widest possible "street" between the two classes of data,
 whilst minimising the number of margin violations (few datasets are truly linearly separable). On
@@ -125,3 +126,42 @@ There are various choices of kernel to consider:
 Sklearn's SVC works particularly well when features are sparse.
 
 We can use SVR (i.e. Support Vector _Regression_) models to identify outliers - these are the points that lie outside the margins of the SVM's "street".
+
+
+## Chapter 6
+
+A decision tree is _non-parametric_, this means:
+* __non-parametric__: The model structure can freely adapt to the data.
+* __parametric__: We have to choose ahead of time how many parameters are required to model the data, e.g. a linear model with a number of transformed features.
+
+### Classification
+
+Gini impurity measures the probability of each class $k$ being present in given node $i$:
+$$G_i = 1 - \sum_{k=1}^Kp_{i,k}$$
+
+"Pure" nodes have a Gini impurity of zero. Where $p_{i,k}$ is simply estimated by comparing the total number of training samples to the number of training samples whose features lead it to the node. Such probabilities can be used to estimate the confidince with which leaf nodes make predictions.
+
+CART recursively tries to minimise the weighted (by number of samples passing to each) average Gini impurity of each pair of child nodes in a binary tree. It splits the training set in half by choosing the feature $k$ and threshold $t_k$ which minimises the quantity:
+$$J(k,t_k) = \frac{m_l}{m}G_l + \frac{m_r}{m}G_r$$
+
+Where $m$ is the total number of training samples, $m_l$ and $m_r$ are the number of instances passed to the left and right children respectively, and $G_l$ and $G_r$ are the corresponding Gini impurities.
+
+This is repeated recursively until any one of a number of possible conditions are met:
+* The leaf node is pure.
+* `max_depth`: This path of the tree has reached a specified maximum depth.
+* `min_samples_split`: When the number of samples passed to a node falls below this number, the node will be declared a leaf node and thus no further splits will occur. 
+* `min_samples_leaf`: When a split is made on a parent node, if the number of samples that pass through to its child is below this number then the split will not take place.
+* ... and more
+
+### Regression
+
+CART can also be used to produce regression trees. The prediction made is the average label value of all the training samples that reach a given node in the tree. The adapted card algorithm recursively tries to minimise:
+$$J(k,t_k) = \frac{m_l}{m}\mathrm{MSE}_l + \frac{m_r}{m}\mathrm{MSE}_r$$
+Where:
+$$\mathrm{MSE}_j = \sum_{i\in j}(\hat{y}_j - y^{(i)})$$
+and
+$$\hat{y}_j = \frac{1}{m_j}\sum_{i\in j}y^{(i)}$$
+
+### General
+
+Decision trees give orthogonal decision boundaries so can be sensitive to dataset rotation.
