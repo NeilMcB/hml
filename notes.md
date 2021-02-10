@@ -5,6 +5,7 @@ Notes from reading through [Hands-On Machine Learning with Scikit-Learn, Keras a
 ## Misc
 
 * Obvious, but remember to consider how your algorithm scales with the number of features and the number of training instances!
+* Random Forests provide a handy way to estimate the importance of each feature for classification and regression.
 
 ## Chapter 2 - End-to-End Machine Learning Landscape
 
@@ -128,7 +129,7 @@ Sklearn's SVC works particularly well when features are sparse.
 We can use SVR (i.e. Support Vector _Regression_) models to identify outliers - these are the points that lie outside the margins of the SVM's "street".
 
 
-## Chapter 6
+## Chapter 6 - Decision Trees
 
 A decision tree is _non-parametric_, this means:
 * __non-parametric__: The model structure can freely adapt to the data.
@@ -165,3 +166,51 @@ $$\hat{y}_j = \frac{1}{m_j}\sum_{i\in j}y^{(i)}$$
 ### General
 
 Decision trees give orthogonal decision boundaries so can be sensitive to dataset rotation.
+
+
+## Chapter 7 - Ensemble Learning and Random Forests
+
+Fluffy explanation...the idea behind ensembles is that even if each classifier is only slightly better than random, when you add together all their decisions the law of large numbers tells us that the combined prediction will, on average, be pretty good. This idea only holds if each classifier is independent; in practice many ensembles will be making similar errors and struggling with the same datapoints. Choosing diverse training features or distinct modelling approaches can help with this point.
+
+Types of ensemble classifiers:
+* __Hard voting__ - take the majority prediction (the mode) of an ensemble of classifiers.
+* __Soft voting__ - take the average probability predicted by each classifier and choose the class with the highest.
+* __Bootstrap aggregating (bagging)__ - train many instances of the same model on different samples (with replacement) of the training data; predicitons can then be obtained from a soft or hard vote of the ensemble.
+
+You can also take samples of features - either taking all training instances and a subset of features (_Random Subspaces_), or a subset of training instances and features (_Random Patches_).
+
+Sklearn provides ensemble classes for voting and bagging:
+```python
+from sklearn.ensemble import BaggingClassifier, VotingClassifier
+
+voting_clf = VotingClassifier(
+    estimators=[('lr', LogisticClassifier()), ..., ('dt', DecisionTreeClassifier())],
+    voting='hard',
+)
+
+bagging_clf = BaggingClassifier(
+    DecisionTreeClassifier(),
+    n_estimators=500,
+    max_samples=100,
+    bootstrap=True,  # Sample with replacement
+    n_jobs=-1,       # Use all CPUs for training and prediction
+)
+
+# Then fit/predict as normal
+```
+
+Generally, a given classifier in an ensemble which uses bagging will only see some of the data. We can therefore use the portion of the training data not seen when training a given classifier to estimate its validation score.
+
+Random Forests provide a handy way to estimate how important each feature is for classification/regression. They do this by looking at how each node (and thus each feature) reduces impurity as training samples pass through. It is weighted by the number of samples considered by each node.
+
+### Boosting
+
+#### Adaptive Boosting (AdaBoost)
+
+Adaptive Boosting iteratively fits a series of models to make up an enseble. The process is:
+* Fit a model to the dataset
+* Assign the model a weight based on how well it fits the data
+* Reweight the training instances based on whether or not the model classified correctly
+* ... and repeat
+
+This produce a series of models, each with an associated weight. The final prediction can then either be a weighted vote or weigthed average probability. A key drawback of this technique is the sequential nature means the process cannot be parallelised.
