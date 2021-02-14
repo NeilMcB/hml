@@ -6,6 +6,8 @@ Notes from reading through [Hands-On Machine Learning with Scikit-Learn, Keras a
 
 * Obvious, but remember to consider how your algorithm scales with the number of features and the number of training instances!
 * Random Forests provide a handy way to estimate the importance of each feature for classification and regression.
+* Numpy's `memmap` function allows files to be accessed in pieces, without needing to load the whole thing into memory.
+* Some scikit-learn functions have a `partial_fit` method, for use in online training.
 
 ## Chapter 2 - End-to-End Machine Learning Landscape
 
@@ -199,9 +201,11 @@ bagging_clf = BaggingClassifier(
 # Then fit/predict as normal
 ```
 
-Generally, a given classifier in an ensemble which uses bagging will only see some of the data. We can therefore use the portion of the training data not seen when training a given classifier to estimate its validation score.
+Generally, a given classifier in an ensemble which uses bagging will only see some of the data. We can therefore use the portion of the training data not seen when training a given classifier to estimate its validation score. This means we don't need to create a separate validation set and can thus train on a larger dataset.
 
 Random Forests provide a handy way to estimate how important each feature is for classification/regression. They do this by looking at how each node (and thus each feature) reduces impurity as training samples pass through. It is weighted by the number of samples considered by each node.
+
+Extra-Trees don't fit the decision threshold when training, instead picking a random value. This adds an extra level of regularisation and speeds up training.
 
 ### Boosting
 
@@ -214,3 +218,53 @@ Adaptive Boosting iteratively fits a series of models to make up an enseble. The
 * ... and repeat
 
 This produce a series of models, each with an associated weight. The final prediction can then either be a weighted vote or weigthed average probability. A key drawback of this technique is the sequential nature means the process cannot be parallelised.
+
+#### Gradient Boosting
+
+Gradient Boosting also iteratively fits a series of models to make up an ensemble. For regression, process is:
+* Fit a model to the dataset
+* Determine the residuals of this model's predictions (i.e. $\vec{y} - \vec{h_0}(X)$)
+* Fit a model to the residuals
+* Determine the residuals of this model's predictions (i.e. $\vec{y} - \vec{h_0}(X) - \vec{h_1}(X)$)
+* ... and repeat
+
+Fitting to the residuals of the prior model is actually equivalent to fitting to the gradient of the Mean Square Error (MSE) loss function, with respect to the prior model. One can therefore swap in different loss functions (and thus gradients) to generalise the model further:
+$$h_m(x) = -\frac{\del L_\mathrm{MSE}}{\del F} = y - F(x)$$
+This is why the term we fit to is called the "pseudo-residual" - other loss functions will not result in the actual residuals being fit to.
+
+Early stopping can be used to determine the optimal number of models to incorporate into this process; this can help to combat overfitting. Stochastic Gradient Boosting also follows this process, but completes the process on a random sample of datapoints each time.
+
+One can incorporate a learning rate parameter, which attenuates the contributions of subsequent models (also known as "shrinkage") and thus acts as a form of regularisation.
+
+#### Stacking
+
+Here we use a final ML model and a held out training set to figure out the best way to combine the outputs of an ensemble of other ML models.
+
+
+## Chapter 8 - Dimensionality Reduction
+
+The principal components of PCA may swap signs with relative instability: vectors can be perpendicular to the hyperplane they define in two directions.
+
+`sklearn`'s PCA can take as input to `n_components` a float representing the fraction of explained variance we wish to preserve.
+
+Kernel PCA allows us to use the kernel trick to perform non-linear decomposition.
+
+
+Locally Linear Embedding (LLE) is a manifold method which tries to preserve the relationship between a point and e.g. its 10 nearest neighbours whilst reconstructing the dataset in a smaller number of dimensions. It's useful for unwrapping a dataset that lies on a lower dimensional manifold. The algorithm has two steps:
+* Find the optimal weights that tell us how to reconstruct each $\vec{x}^{(i)}$ as a linear function its $k$ nearest neighbours. This gives us an $N\times N$ matrix of representations.
+* Holding these weights constant, we then find the lower-dimensional matrix of points $Z$ that best recreates these original relationships by minimising the sum squared distance between our new vectors that make up $Z$.
+
+
+
+## Chapter 9 - Unsupervised Learning
+
+You can use cluster affinities (i.e. how well an instance fits in with each cluster) as a form of vector embedding.
+
+KMeans can be scored using _inertia_ - the mean squared distance between each datapoint and the centroid it is assigned to.
+
+Mini-batch KMeans is useful for when the dataset is large and therefore the algorithm is slow or the dataset doesn't fit in memory. In the case of the latter we can use Numpy's `memmap` class.
+
+There are two main methods for choosing the optimal number of clusters:
+* __Elbow method__: this is less exact - we plot the inertia score for a range of cluster counts; generally this will follow an "arm"-like shape where inertia drops steeply upto a certain value of $k$, then suddenly drops more slowly. The point at which this behaviour changes is known as the elbow, and this value of k is taken to be the optimum.
+* __Silhouette score__: this metric compares an instance's average distance to all the other instances in its cluster to the average distance to all the instances in its next-nearest cluster. The closer this value is to 1, the better separated this instance's cluster is. The best choice of $k$ is that which maximises the mean silhouette score.
+
